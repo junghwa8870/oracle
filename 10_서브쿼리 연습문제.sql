@@ -209,3 +209,140 @@ SELECT * FROM
         ) tbl
     )
 WHERE rn > 10 AND rn <= 20;
+
+/*
+문제 13. 
+--EMPLOYEES 와 DEPARTMENTS 테이블에서 JOB_ID가 SA_MAN 사원의 정보의 LAST_NAME, JOB_ID, 
+DEPARTMENT_ID,DEPARTMENT_NAME을 출력하세요.
+*/
+SELECT e.last_name, e.job_id, e.department_id,
+    (SELECT d.department_name
+    FROM departments d
+    WHERE e.department_id = d.department_id) tbl
+FROM employees e
+WHERE job_id = 'SA_MAN';
+
+SELECT
+    tbl.*, d.department_name
+FROM
+    (
+    SELECT
+        last_name, job_id, department_id
+    FROM employees
+    WHERE job_id = 'SA_MAN'
+    ) tbl
+JOIN departments d
+ON tbl.department_id = d.department_id;
+
+/*
+문제 14
+-- DEPARTMENTS 테이블에서 각 부서의 ID, NAME, MANAGER_ID와 부서에 속한 인원수를 출력하세요.
+-- 인원수 기준 내림차순 정렬하세요.
+-- 사람이 없는 부서는 출력하지 않습니다.
+*/
+-- GROUP BY를 사용하는 이유: 집계 함수와 함께 사용: COUNT, SUM, AVG, MAX, MIN 등의 집계 함수와 함께 사용
+-- 그룹 단위로 데이터를 집계할 수 있습니다
+-- 도시별로 판매량을 합산하거나, 부서별로 직원 수를 계산하는 등의 작업이 이에 해당합니다.
+
+SELECT
+    d.department_id, d.department_name, d.manager_id,
+    a.total
+FROM departments d
+JOIN
+    (
+    SELECT
+        department_id, COUNT(*) AS total
+    FROM employees
+    GROUP BY department_id
+    ) a
+ON d.department_id = a.department_id
+ORDER BY a.total DESC;
+
+SELECT
+    d.department_id, d.department_name, d.manager_id,
+    (
+    SELECT COUNT(*)
+    FROM employees e
+    WHERE e.department_id = d.department_id
+    ) AS total
+FROM departments d
+WHERE EXISTS (
+    SELECT 1
+    FROM employees e
+    WHERE e.department_id = d.department_id
+)
+ORDER BY total DESC;
+/*
+문제 15
+--부서에 대한 정보 전부와, 주소, 우편번호, 부서별 평균 연봉을 구해서 출력하세요.
+--부서별 평균이 없으면 0으로 출력하세요.
+*/
+SELECT * FROM employees;
+SELECT * FROM departments;
+SELECT * FROM locations;
+
+
+SELECT
+    d.*,
+    loc.street_address, loc.postal_code,
+    NVL(tbl.result, 0) AS 부서별평균급여
+FROM departments d
+JOIN locations loc
+ON d.location_id = loc.location_id
+LEFT JOIN (
+    SELECT
+        department_id,
+        TRUNC(AVG(salary),0) AS result
+    FROM employees
+    GROUP BY department_id
+) tbl
+ON d.department_id = tbl.department_id
+ORDER BY tbl.result;
+
+SELECT 
+    d.*,
+    loc.street_address, loc.postal_code,
+    NVL(
+     (
+        SELECT
+            TRUNC(AVG(salary), 0)
+        FROM employees e
+        WHERE e.department_id = d.department_id
+     ), 
+    0) AS 부서별평균급여
+FROM departments d
+JOIN locations loc
+ON d.location_id = loc.location_id
+ORDER BY 부서별평균급여 DESC;
+
+/*
+문제 16
+-문제 15 결과에 대해 DEPARTMENT_ID기준으로 내림차순 정렬해서 
+ROWNUM을 붙여 1-10 데이터 까지만 출력하세요.
+*/
+
+SELECT *
+FROM
+    (
+    SELECT ROWNUM AS rn, tbl2.*
+    FROM
+        (
+        SELECT
+            d.*,
+            loc.street_address, loc.postal_code,
+            NVL(tbl.result, 0) AS 부서별평균급여
+        FROM departments d
+        JOIN locations loc
+        ON d.location_id = loc.location_id
+        LEFT JOIN (
+            SELECT
+                department_id,
+                TRUNC(AVG(salary),0) AS result
+            FROM employees
+            GROUP BY department_id
+        ) tbl
+        ON d.department_id = tbl.department_id
+        ORDER BY d.department_id DESC
+        ) tbl2
+    )
+WHERE rn >= 1 AND rn <= 10;
