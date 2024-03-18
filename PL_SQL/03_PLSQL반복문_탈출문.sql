@@ -19,7 +19,7 @@ END;
 DECLARE
     v_num NUMBER := 7;
 BEGIN
-    FOR i IN 1..0 -- .을 두개 작성해서 범위를 표현
+    FOR i IN 1..9 -- .을 두개 작성해서 범위를 표현
     LOOP
         dbms_output.put_line(v_num || ' x ' || i || ' = ' || v_num*i);
     END LOOP;
@@ -29,7 +29,7 @@ END;
 DECLARE
     v_num NUMBER := 7;
 BEGIN
-    FOR i IN 1..0 -- .을 두개 작성해서 범위를 표현
+    FOR i IN 1..9 -- .을 두개 작성해서 범위를 표현
     LOOP
         CONTINUE WHEN MOD(i, 2) = 0;
         dbms_output.put_line(v_num || ' x ' || i || ' = ' || v_num*i);
